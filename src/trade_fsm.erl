@@ -18,3 +18,39 @@
          wait/2,
          ready/2, ready/3]).
 
+%%
+%% PUBLIC API
+%%
+
+start(Name) ->
+  gen_fsm:start(?MODULE, [Name], []).
+
+start_link(Name) ->
+  gen_fsm:start_link(?MODULE, [Name], []).
+
+%% Starts a trade request
+%% timeouts after 30 seconds
+trade(OwnPid, OtherPid) ->
+  gen_fsm:sync_send_event(OwnPid, {negotiate, OtherPid}, 30000).
+
+%% Accepts a trade request
+accept_trade(OwnPid) ->
+  gen_fsm:sync_send_event(OwnPid, accept_negotiate).
+
+%% Puts item on the negotiation table
+make_offer(OwnPid, Item) ->
+  gen_fsm:send_event(OwnPid, {make_offer, Item}).
+
+%% Takes an item off the negotiation table
+retract_offer(OwnPid, Item) ->
+  gen_fsm:send_event(OwnPid, {retract_offer, Item}).
+
+%% Let's the other party know that you're ready to finish the deal
+%% and waits until the other party is ready.
+ready(OwnPid) ->
+  gen_fsm:sync_send_event(OwnPid, ready, infinity).
+
+%% Cancels a transaction
+cancel(OwnPid) ->
+  gen_fsm:sync_send_all_state_event(OwnPid, cancel).
+
